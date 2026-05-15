@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>MedDelivery — Your Health, Delivered</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+    <link rel="stylesheet" href="styles.css"/>
+    <style>
+        /* ── STORE OWNER DASHBOARD ── */
+        .owner-shell { display: flex; min-height: calc(100vh - 64px); background: #f8f9fc; }
+
+        /* Sidebar */
+        .owner-sidebar {
+            width: 240px; flex-shrink: 0;
+            background: #0f172a; color: #cbd5e1;
+            display: flex; flex-direction: column;
+            padding: 0; position: sticky; top: 64px; height: calc(100vh - 64px);
+            overflow-y: auto;
+        }
+        .sidebar-store-info {
+            padding: 24px 20px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+        }
+        .sidebar-store-icon {
+            width: 44px; height: 44px; border-radius: 12px;
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; margin-bottom: 10px;
+        }
+        .sidebar-store-name { font-size: 15px; font-weight: 600; color: #f1f5f9; line-height: 1.3; }
+        .sidebar-store-sub { font-size: 12px; color: #64748b; margin-top: 2px; }
+
+        .sidebar-nav { padding: 12px 10px; flex: 1; }
+        .sidebar-section-label {
+            font-size: 10px; font-weight: 700; color: #475569;
+            letter-spacing: .1em; text-transform: uppercase;
+            padding: 8px 10px 4px;
+        }
+        .sidebar-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 12px; border-radius: 8px; cursor: pointer;
+            font-size: 14px; color: #94a3b8; font-weight: 500;
+            transition: all .18s; margin-bottom: 2px; border: none;
+            background: transparent; width: 100%; text-align: left;
+        }
+        .sidebar-item:hover { background: rgba(255,255,255,.06); color: #e2e8f0; }
+        .sidebar-item.active { background: rgba(99,102,241,.18); color: #818cf8; }
+        .sidebar-item .si-icon { font-size: 16px; width: 20px; text-align: center; }
+        .sidebar-badge {
+            margin-left: auto; background: #ef4444; color: #fff;
+            font-size: 10px; font-weight: 700; border-radius: 10px;
+            padding: 1px 6px; min-width: 18px; text-align: center;
+        }
+
+        /* Owner main content */
+        .owner-main { flex: 1; overflow-y: auto; }
+
+        /* Owner tabs (pages) */
+        .owner-tab { display: none; }
+        .owner-tab.active { display: block; }
+
+        /* Stats row */
+        .stats-row {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+            padding: 24px 28px 0;
+        }
+        .stat-card {
+            background: #fff; border-radius: 14px; padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,.06); border: 1px solid #e2e8f0;
+            display: flex; align-items: center; gap: 14px;
+        }
+        .stat-icon {
+            width: 46px; height: 46px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center; font-size: 20px;
+        }
+        .stat-icon.blue  { background: #eff6ff; }
+        .stat-icon.green { background: #f0fdf4; }
+        .stat-icon.amber { background: #fffbeb; }
+        .stat-icon.red   { background: #fef2f2; }
+        .stat-num { font-size: 26px; font-weight: 700; color: #0f172a; line-height: 1; }
+        .stat-lbl { font-size: 12px; color: #64748b; margin-top: 3px; }
+
+        /* Owner section */
+        .owner-section { padding: 24px 28px; }
+        .owner-section-head {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 18px;
+        }
+        .owner-section-title { font-size: 18px; font-weight: 700; color: #0f172a; }
+        .owner-section-sub { font-size: 13px; color: #64748b; margin-top: 2px; }
+
+        /* Inventory table */
+        .inv-table-wrap {
+            background: #fff; border-radius: 14px; border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,.06); overflow: hidden;
+        }
+        .inv-table { width: 100%; border-collapse: collapse; }
+        .inv-table th {
+            background: #f8fafc; font-size: 11px; font-weight: 700;
+            color: #64748b; text-transform: uppercase; letter-spacing: .07em;
+            padding: 11px 16px; text-align: left; border-bottom: 1px solid #e2e8f0;
+        }
+        .inv-table td { padding: 13px 16px; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #334155; vertical-align: middle; }
+        .inv-table tr:last-child td { border-bottom: none; }
+        .inv-table tr:hover td { background: #f8fafc; }
+        .med-name-cell { font-weight: 600; color: #0f172a; }
+        .cat-chip {
+            display: inline-block; background: #eff6ff; color: #3b82f6;
+            font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px;
+        }
+        .stock-num { font-weight: 600; }
+        .stock-num.low { color: #ef4444; }
+        .stock-num.ok  { color: #10b981; }
+        .action-btns { display: flex; gap: 6px; }
+        .tbl-btn {
+            padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600;
+            border: none; cursor: pointer; transition: all .15s;
+        }
+        .tbl-btn.edit  { background: #eff6ff; color: #3b82f6; }
+        .tbl-btn.edit:hover  { background: #3b82f6; color: #fff; }
+        .tbl-btn.del   { background: #fef2f2; color: #ef4444; }
+        .tbl-btn.del:hover   { background: #ef4444; color: #fff; }
+
+        /* Inline edit panel */
+        .edit-panel {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            border-radius: 16px; padding: 24px; margin-bottom: 20px;
+            display: none; border: 1px solid rgba(99,102,241,.3);
+            box-shadow: 0 8px 30px rgba(0,0,0,.15);
+        }
+        .edit-panel.open { display: block; animation: slideDown .25s ease; }
+        @keyframes slideDown { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
+        .edit-panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .edit-panel-title { font-size: 16px; font-weight: 700; color: #f1f5f9; }
+        .edit-panel-close { background: rgba(255,255,255,.08); border: none; color: #94a3b8; width: 30px; height: 30px; border-radius: 8px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; }
+        .edit-panel-close:hover { background: rgba(255,255,255,.14); color: #f1f5f9; }
+        .edit-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+        .edit-group label { font-size: 12px; font-weight: 600; color: #94a3b8; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .06em; }
+        .edit-inp {
+            width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,.1);
+            background: rgba(255,255,255,.06); color: #f1f5f9; font-size: 14px; box-sizing: border-box;
+            transition: border-color .15s;
+        }
+        .edit-inp:focus { outline: none; border-color: #6366f1; }
+        .edit-inp option { background: #1e293b; }
+        .edit-actions { display: flex; gap: 10px; margin-top: 6px; }
+        .btn-save { background: linear-gradient(135deg, #6366f1, #3b82f6); color: #fff; border: none; padding: 10px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity .15s; }
+        .btn-save:hover { opacity: .88; }
+        .btn-cancel-edit { background: rgba(255,255,255,.08); color: #94a3b8; border: none; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+        .btn-cancel-edit:hover { background: rgba(255,255,255,.13); color: #f1f5f9; }
+
+        /* Add medicine form */
+        .add-med-panel {
+            background: #fff; border-radius: 16px; border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,.06); padding: 24px; margin-bottom: 24px;
+        }
+        .amp-head { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+        .amp-badge { background: #eff6ff; color: #3b82f6; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 20px; }
+        .amp-title { font-size: 16px; font-weight: 700; color: #0f172a; }
+        .amp-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 14px; }
+
+        /* Owner input styles */
+        .o-label { font-size: 12px; font-weight: 600; color: #64748b; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .05em; }
+        .o-inp {
+            width: 100%; padding: 10px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px;
+            font-size: 14px; color: #0f172a; background: #f8fafc; box-sizing: border-box;
+            transition: border-color .15s, background .15s;
+        }
+        .o-inp:focus { outline: none; border-color: #6366f1; background: #fff; }
+
+        /* Order cards (owner) */
+        .owner-order-card {
+            background: #fff; border-radius: 14px; border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,.06); padding: 20px; margin-bottom: 14px;
+        }
+        .ooc-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
+        .ooc-id { font-size: 16px; font-weight: 700; color: #0f172a; }
+        .ooc-meta { font-size: 13px; color: #64748b; margin-top: 3px; }
+        .ooc-items { font-size: 13px; color: #334155; margin-bottom: 8px; padding: 10px 12px; background: #f8fafc; border-radius: 8px; }
+        .ooc-bottom { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
+        .ooc-total { font-size: 15px; font-weight: 700; color: #0f172a; }
+        .status-select { padding: 7px 10px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; background: #f8fafc; }
+        .rx-link { display: inline-flex; align-items: center; gap: 5px; color: #6366f1; font-size: 13px; font-weight: 600; text-decoration: none; padding: 5px 10px; background: #eff6ff; border-radius: 6px; margin-top: 8px; }
+        .rx-link:hover { background: #6366f1; color: #fff; }
+
+        /* Prescription card (owner) */
+        .rx-card {
+            background: #fff; border-radius: 14px; border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,.06); padding: 20px; margin-bottom: 14px;
+        }
+        .rx-card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
+        .rx-id { font-size: 16px; font-weight: 700; color: #0f172a; }
+        .rx-patient { font-size: 13px; color: #64748b; margin-top: 3px; }
+        .rx-info-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+        .rx-info-box { background: #f8fafc; border-radius: 8px; padding: 10px 12px; font-size: 13px; }
+        .rx-info-box strong { display: block; font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 2px; }
+        .rx-respond-form { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 16px; margin-top: 14px; }
+        .rx-respond-form h4 { font-size: 13px; font-weight: 700; color: #166534; margin: 0 0 12px; }
+        .rx-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        .rx-form-grid-full { margin-bottom: 10px; }
+        .rx-inp { width: 100%; padding: 9px 11px; border: 1.5px solid #d1fae5; border-radius: 7px; font-size: 13px; background: #fff; box-sizing: border-box; }
+        .rx-reject-form { background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 16px; margin-top: 14px; }
+        .rx-reject-form h4 { font-size: 13px; font-weight: 700; color: #991b1b; margin: 0 0 12px; }
+        .rx-action-btns { display: flex; gap: 8px; margin-top: 12px; }
+        .btn-confirm { background: #10b981; color: #fff; border: none; padding: 9px 20px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; }
+        .btn-confirm:hover { background: #059669; }
+        .btn-reject { background: #ef4444; color: #fff; border: none; padding: 9px 20px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; }
+        .btn-reject:hover { background: #dc2626; }
+        .btn-send { background: #6366f1; color: #fff; border: none; padding: 9px 20px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; }
+        .btn-cancel-rx { background: #e2e8f0; color: #64748b; border: none; padding: 9px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+
+        /* Status pills */
+        .spill {
+            display: inline-block; font-size: 11px; font-weight: 700;
+            padding: 3px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: .06em;
+        }
+        .spill-PENDING          { background: #fef9c3; color: #854d0e; }
+        .spill-CONFIRMED        { background: #dcfce7; color: #166534; }
+        .spill-NOT_CONFIRMED    { background: #fee2e2; color: #991b1b; }
+        .spill-PLACED           { background: #dbeafe; color: #1e40af; }
+        .spill-OUT_FOR_DELIVERY { background: #fef3c7; color: #92400e; }
+        .spill-DELIVERED        { background: #d1fae5; color: #065f46; }
+
+        /* Home tab */
+        .owner-home-header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #312e81 100%);
+            padding: 40px 28px 32px; position: relative; overflow: hidden;
+        }
+        .owner-home-header::before {
+            content: ''; position: absolute; top: -40px; right: -40px;
+            width: 200px; height: 200px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(99,102,241,.4), transparent 70%);
+        }
+        .ohh-label { font-size: 12px; font-weight: 700; color: #818cf8; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 8px; }
+        .ohh-name { font-size: 28px; font-weight: 800; color: #f1f5f9; margin-bottom: 6px; }
+        .ohh-sub { font-size: 14px; color: #64748b; }
+
+        /* Recent activity */
+        .activity-list { background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; overflow: hidden; }
+        .activity-item { display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-bottom: 1px solid #f1f5f9; }
+        .activity-item:last-child { border-bottom: none; }
+        .ai-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .ai-dot.order { background: #3b82f6; }
+        .ai-dot.rx    { background: #8b5cf6; }
+        .ai-dot.stock { background: #f59e0b; }
+        .ai-text { flex: 1; font-size: 14px; color: #334155; }
+        .ai-time { font-size: 12px; color: #94a3b8; }
+
+        /* Low stock panel */
+        .low-stock-panel { background: #fff; border-radius: 14px; border: 1px solid #fecaca; box-shadow: 0 1px 3px rgba(0,0,0,.06); overflow: hidden; }
+        .lsp-head { background: #fef2f2; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #fecaca; }
+        .lsp-title { font-size: 14px; font-weight: 700; color: #991b1b; display: flex; align-items: center; gap: 6px; }
+        .lsp-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; border-bottom: 1px solid #f1f5f9; }
+        .lsp-item:last-child { border-bottom: none; }
+        .lsp-med { font-size: 14px; font-weight: 600; color: #0f172a; }
+        .lsp-stock { font-size: 12px; color: #ef4444; font-weight: 700; }
+
+        /* Filters row */
+        .filter-row { display: flex; gap: 10px; margin-bottom: 16px; align-items: center; }
+        .filter-inp { padding: 9px 14px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 14px; color: #334155; background: #fff; }
+        .filter-inp:focus { outline: none; border-color: #6366f1; }
+
+        /* Empty */
+        .owner-empty { text-align: center; padding: 48px 20px; color: #94a3b8; }
+        .owner-empty .oe-icon { font-size: 44px; margin-bottom: 12px; }
+        .owner-empty .oe-title { font-size: 16px; font-weight: 600; color: #334155; margin-bottom: 4px; }
+
+        /* Responsive tweaks */
+        @media (max-width: 900px) {
+            .owner-sidebar { width: 60px; }
+            .sidebar-item span:not(.si-icon) { display: none; }
+            .sidebar-store-info .sidebar-store-name,
+            .sidebar-store-info .sidebar-store-sub,
+            .sidebar-section-label { display: none; }
+            .stats-row { grid-template-columns: 1fr 1fr; }
+            .amp-grid { grid-template-columns: 1fr 1fr; }
+            .edit-grid { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ═══ AUTH SCREEN ═══ -->
+<div class="auth-screen active" id="authScreen">
+    <div class="auth-bg">
+        <div class="auth-orb orb1"></div>
+        <div class="auth-orb orb2"></div>
+        <div class="auth-orb orb3"></div>
+        <div class="auth-grid"></div>
+    </div>
+
+    <div class="auth-split">
+        <!-- LEFT PANEL -->
+        <div class="auth-left">
+            <div class="auth-brand-mark">
+                <div class="brand-icon-lg">
+                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                        <rect x="17" y="4" width="6" height="32" rx="3" fill="white"/>
+                        <rect x="4" y="17" width="32" height="6" rx="3" fill="white"/>
+                    </svg>
+                </div>
+                <span>MedDelivery</span>
+            </div>
+            <div class="auth-left-content">
+                <h1 class="auth-headline">
+                    Healthcare<br/>
+                    <em>at your</em><br/>
+                    doorstep.
+                </h1>
+                <p class="auth-sub">Connecting patients with trusted pharmacies. Order, track, and receive your medicines with ease.</p>
+                <div class="auth-features">
+                    <div class="af-item"><div class="af-dot"></div><span>30-minute express delivery</span></div>
+                    <div class="af-item"><div class="af-dot"></div><span>Verified medical stores only</span></div>
+                    <div class="af-item"><div class="af-dot"></div><span>Real-time order tracking</span></div>
+                </div>
+                <div class="auth-trust">
+                    <div class="trust-avatars">
+                        <div class="ta" style="background:#f97316"></div>
+                        <div class="ta" style="background:#8b5cf6"></div>
+                        <div class="ta" style="background:#06b6d4"></div>
+                        <div class="ta" style="background:#10b981"></div>
+                    </div>
+                    <span>Trusted by <strong>12,000+</strong> patients</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div class="auth-right">
+            <div class="auth-card">
+                <div class="auth-tabs">
+                    <button class="auth-tab active" id="tabLogin" onclick="switchTab('login')">Sign In</button>
+                    <button class="auth-tab" id="tabReg" onclick="switchTab('register')">Create Account</button>
+                    <div class="tab-slider" id="tabSlider"></div>
+                </div>
+
+                <!-- LOGIN -->
+                <div class="auth-form active" id="formLogin">
+                    <div class="form-welcome"><h2>Welcome back</h2><p>Sign in to continue your health journey</p></div>
+                    <div class="input-group">
+                        <label>Email Address</label>
+                        <div class="input-wrap">
+                            <svg class="inp-icon" viewBox="0 0 20 20" fill="none"><path d="M3 5h14l-7 7-7-7z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="2" y="5" width="16" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/></svg>
+                            <input type="email" id="loginEmail" placeholder="you@example.com"/>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Password</label>
+                        <div class="input-wrap">
+                            <svg class="inp-icon" viewBox="0 0 20 20" fill="none"><rect x="4" y="9" width="12" height="9" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M7 9V6a3 3 0 016 0v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                            <input type="password" id="loginPassword" placeholder="Your password"/>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>I am a…</label>
+                        <div class="role-toggle">
+                            <button class="role-btn active" id="lrPatient" onclick="setLoginRole('PATIENT')">
+                                <span class="role-emoji">🧑‍⚕️</span><span class="role-txt">Patient</span>
+                            </button>
+                            <button class="role-btn" id="lrStore" onclick="setLoginRole('STORE')">
+                                <span class="role-emoji">🏪</span><span class="role-txt">Store Owner</span>
+                            </button>
+                        </div>
+                    </div>
+                    <button class="auth-submit" onclick="login()">
+                        <span>Sign In</span>
+                        <svg viewBox="0 0 20 20" fill="none"><path d="M4 10h12M11 5l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                    <p class="auth-switch">No account? <a onclick="switchTab('register')">Create one →</a></p>
+
+                    <!-- ADMIN LOGIN SEPARATOR -->
+                    <div class="admin-sep">
+                        <span>or</span>
+                    </div>
+                    <button class="admin-login-btn" onclick="showAdminLogin()">
+                        🛡️ Admin Portal Login
+                    </button>
+
+                    <!-- ADMIN LOGIN INLINE FORM -->
+                    <div class="admin-login-form" id="adminLoginForm" style="display:none">
+                        <div class="admin-form-title">🛡️ Admin Access</div>
+                        <div class="input-group">
+                            <label>Admin Email</label>
+                            <div class="input-wrap">
+                                <svg class="inp-icon" viewBox="0 0 20 20" fill="none"><path d="M3 5h14l-7 7-7-7z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="2" y="5" width="16" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/></svg>
+                                <input type="email" id="adminEmail" placeholder="admin@meddelivery.com"/>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Admin Password</label>
+                            <div class="input-wrap">
+                                <svg class="inp-icon" viewBox="0 0 20 20" fill="none"><rect x="4" y="9" width="12" height="9" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M7 9V6a3 3 0 016 0v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                                <input type="password" id="adminPassword" placeholder="Admin password"/>
+                            </div>
+                        </div>
+                        <button class="auth-submit admin-submit-btn" onclick="adminLogin()">
+                            <span>Access Admin Panel</span>
+                            <svg viewBox="0 0 20 20" fill="none"><path d="M4 10h12M11 5l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </button>
+                        <p class="auth-switch"><a onclick="hideAdminLogin()">← Back to regular login</a></p>
+                    </div>
+                </div>
+
+                <!-- REGISTER -->
+                <div class="auth-form" id="formRegister">
+                    <div class="form-welcome"><h2>Join MedDelivery</h2><p>Create your account in seconds</p></div>
+                    <div class="input-group">
+                        <label>Full Name</label>
+                        <div class="input-wrap">
+                            <svg class="inp-icon" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M4 17c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                            <input type="text" id="regName" placeholder="e.g. Santhosh Kumar"/>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Email Address</label>
+                        <div class="input-wrap">
+                            <svg class="inp-icon" viewBox="0 0 20 20" fill="none"><path d="M3 5h14l-7 7-7-7z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="2" y="5" width="16" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/></svg>
+                            <input type="email" id="regEmail" placeholder="you@example.com"/>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Password</label>
+                        <div class="input-wrap">
+                            <svg class="inp-icon" viewBox="0 0 20 20" fill="none"><rect x="4" y="9" width="12" height="9" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M7 9V6a3 3 0 016 0v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                            <input type="password" id="regPassword" placeholder="Minimum 6 characters"/>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Register as…</label>
+                        <div class="role-toggle">
+                            <button class="role-btn active" id="rrPatient" onclick="setRegRole('PATIENT')">
+                                <span class="role-emoji">🧑‍⚕️</span><span class="role-txt">Patient</span>
+                            </button>
+                            <button class="role-btn" id="rrStore" onclick="setRegRole('STORE')">
+                                <span class="role-emoji">🏪</span><span class="role-txt">Store Owner</span>
+                            </button>
+                        </div>
+                    </div>
+                    <button class="auth-submit" onclick="register()">
+                        <span>Create Account</span>
+                        <svg viewBox="0 0 20 20" fill="none"><path d="M4 10h12M11 5l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                    <p class="auth-switch">Have an account? <a onclick="switchTab('login')">Sign in →</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ MAIN APP ═══ -->
+<div class="app" id="mainApp">
+
+    <!-- NAVBAR -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-inner">
+            <div class="nav-brand">
+                <div class="brand-icon-sm">
+                    <svg width="16" height="16" viewBox="0 0 40 40" fill="none">
+                        <rect x="17" y="4" width="6" height="32" rx="3" fill="white"/>
+                        <rect x="4" y="17" width="32" height="6" rx="3" fill="white"/>
+                    </svg>
+                </div>
+                MedDelivery
+            </div>
+            <div class="nav-tabs" id="navTabs"></div>
+            <div class="nav-right">
+                <div class="user-chip" id="userChip">
+                    <div class="user-av" id="userAv"></div>
+                    <span id="userName">—</span>
+                    <span class="role-badge" id="roleBadge"></span>
+                </div>
+                <button class="btn-ghost" onclick="logout()">Sign Out</button>
+                <button class="cart-fab" id="cartFab" onclick="toggleCart()" style="display:none">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61h9.72a2 2 0 001.99-1.61L23 6H6"/></svg>
+                    <span class="cart-count" id="cartCount">0</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- CART DRAWER -->
+    <div class="scrim" id="scrim" onclick="toggleCart()"></div>
+    <div class="cart-drawer" id="cartDrawer">
+        <div class="cd-head">
+            <h3>Your Cart</h3>
+            <button class="cd-close" onclick="toggleCart()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div class="cd-body" id="cdBody"></div>
+        <div class="cd-foot">
+            <div class="cd-total"><span>Total</span><strong id="cartTotal">₹0.00</strong></div>
+            <button class="btn-ghost" onclick="clearCart()" style="width:100%;margin-bottom:8px">🗑 Clear Cart</button>
+            <button class="btn-checkout" onclick="goCheckout()">Proceed to Checkout →</button>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         PATIENT PAGES
+    ══════════════════════════════════════════ -->
+
+    <!-- HOME -->
+    <div class="page active" id="page-home">
+        <div class="hero">
+            <div class="hero-bg"><div class="hero-blob b1"></div><div class="hero-blob b2"></div></div>
+            <div class="hero-content">
+                <div class="hero-tag" id="heroTag">👋 Welcome back!</div>
+                <h1 class="hero-h1">Medicines<br/><em>Delivered Fast</em></h1>
+                <p class="hero-p">Order from certified pharmacies — at your doorstep in minutes.</p>
+                <div class="hero-searchbar">
+                    <svg viewBox="0 0 20 20" fill="none"><circle cx="9" cy="9" r="5.5" stroke="currentColor" stroke-width="1.5"/><path d="M15 15l-2.5-2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    <input type="text" id="heroSearch" placeholder="Search medicines, vitamins, supplements…" oninput="heroSearchFn(this.value)"/>
+                    <button onclick="doHeroSearch()">Search</button>
+                </div>
+                <div class="hero-kpis">
+                    <div class="kpi"><span class="kpi-n" id="kpiMeds">—</span><span class="kpi-l">Medicines</span></div>
+                    <div class="kpi-div"></div>
+                    <div class="kpi"><span class="kpi-n">30m</span><span class="kpi-l">Avg Delivery</span></div>
+                    <div class="kpi-div"></div>
+                    <div class="kpi"><span class="kpi-n">4.9★</span><span class="kpi-l">Rating</span></div>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="hv-card hv1"><div class="hv-icon">💊</div><div class="hv-text"><strong>Paracetamol 500mg</strong><span>₹25.00 · In Stock</span></div></div>
+                <div class="hv-card hv2"><div class="hv-icon">🌿</div><div class="hv-text"><strong>Vitamin D3</strong><span>₹180.00 · In Stock</span></div></div>
+                <div class="hv-card hv3"><div class="hv-pill">📦 Order #1042 — Out for Delivery</div></div>
+            </div>
+        </div>
+        <div class="section">
+            <div class="sec-hd">
+                <h2 class="sec-title">Featured Medicines</h2>
+                <button class="btn-text" onclick="go('medicines')">View all →</button>
+            </div>
+            <div class="med-grid" id="homeGrid">
+                <div class="skeleton-grid"><div class="skel-card"></div><div class="skel-card"></div><div class="skel-card"></div><div class="skel-card"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BROWSE MEDICINES -->
+    <div class="page" id="page-medicines">
+        <div class="page-header"><div class="ph-inner"><h1>Browse Medicines</h1><p>Find medicines from verified pharmacies near you</p></div></div>
+        <div class="section">
+            <div class="filter-bar">
+                <div class="search-wrap">
+                    <svg viewBox="0 0 20 20" fill="none"><circle cx="9" cy="9" r="5.5" stroke="currentColor" stroke-width="1.5"/><path d="M15 15l-2.5-2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    <input type="text" class="search-inp" id="medSearch" placeholder="Search medicines…" oninput="filterMeds()"/>
+                </div>
+                <div class="store-chips" id="storeChips">
+                    <button class="chip active" onclick="setStore(null,this)">All Stores</button>
+                </div>
+            </div>
+            <div class="med-grid" id="allGrid"><div class="loader-ring"></div></div>
+        </div>
+    </div>
+
+    <!-- TRACK ORDERS -->
+    <div class="page" id="page-orders">
+        <div class="page-header"><div class="ph-inner"><h1>Order Tracking</h1><p>Real-time updates on your deliveries</p></div></div>
+        <div class="section">
+            <div class="track-bar">
+                <div class="input-wrap" style="flex:1">
+                    <svg class="inp-icon" viewBox="0 0 20 20" fill="none"><path d="M3 5h14l-7 7-7-7z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="2" y="5" width="16" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/></svg>
+                    <input type="email" id="trackEmail" placeholder="Enter your email address"/>
+                </div>
+                <button class="btn-primary" onclick="trackOrders()">Track Orders</button>
+            </div>
+            <div id="orderList"></div>
+        </div>
+    </div>
+
+    <!-- CHECKOUT -->
+    <div class="page" id="page-checkout">
+        <div class="page-header"><div class="ph-inner"><h1>Checkout</h1><p>Almost there! Fill in your delivery details</p></div></div>
+        <div class="section">
+            <div class="checkout-layout">
+                <div class="checkout-form-wrap">
+                    <div class="form-section">
+                        <h3>Delivery Details</h3>
+                        <div class="form-row">
+                            <div class="input-group"><label>Full Name *</label><div class="input-wrap"><input type="text" id="cName" placeholder="Santhosh Kumar"/></div></div>
+                            <div class="input-group"><label>Phone *</label><div class="input-wrap"><input type="tel" id="cPhone" placeholder="+91 98765 43210"/></div></div>
+                        </div>
+                        <div class="input-group"><label>Email *</label><div class="input-wrap"><input type="email" id="cEmail" placeholder="you@email.com"/></div></div>
+                        <div class="input-group"><label>Delivery Address *</label><textarea id="cAddr" class="textarea-inp" placeholder="House No, Street, Area, City, PIN…"></textarea></div>
+                        <div class="input-group"><label>Select Store *</label><select id="cStore" class="select-inp"><option value="">— Select a Store —</option></select></div>
+                        <button class="btn-primary btn-full" onclick="placeOrder()">✅ Place Order</button>
+                    </div>
+                </div>
+                <div class="order-summary" id="checkoutSummary"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PRESCRIPTION REQUESTS -->
+    <div class="page" id="page-prescription">
+        <div class="page-header"><div class="ph-inner"><h1>Prescription Request</h1><p>Upload a prescription and let the store confirm availability and bill amount</p></div></div>
+        <div class="section">
+            <div class="checkout-layout">
+                <div class="form-section">
+                    <h3>Upload Prescription</h3>
+                    <div class="form-row">
+                        <div class="input-group"><label>Full Name *</label><div class="input-wrap"><input type="text" id="pName" placeholder="Patient name"/></div></div>
+                        <div class="input-group"><label>Phone *</label><div class="input-wrap"><input type="tel" id="pPhone" placeholder="+91 98765 43210"/></div></div>
+                    </div>
+                    <div class="input-group"><label>Email *</label><div class="input-wrap"><input type="email" id="pEmail" placeholder="you@email.com"/></div></div>
+                    <div class="input-group"><label>Select Store *</label><select id="pStore" class="select-inp"><option value="">— Select a Store —</option></select></div>
+                    <div class="input-group"><label>Delivery Address *</label><textarea id="pAddr" class="textarea-inp" placeholder="House No, Street, Area, City, PIN…"></textarea></div>
+                    <div class="input-group"><label>Note to Store</label><textarea id="pNote" class="textarea-inp" placeholder="Any preferred brand, urgency, or medicine details…"></textarea></div>
+                    <div class="input-group">
+                        <label>Prescription File *</label>
+                        <div class="file-wrap"><input type="file" id="pFile" accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"/></div>
+                    </div>
+                    <button class="btn-primary btn-full" onclick="submitPrescriptionRequest()">Submit Prescription</button>
+                </div>
+                <div>
+                    <div class="sec-hd"><h2 class="sec-title">My Requests</h2></div>
+                    <div id="prescriptionRequestList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         STORE OWNER DASHBOARD
+    ══════════════════════════════════════════ -->
+    <div class="page" id="page-store">
+        <div class="owner-shell">
+
+            <!-- SIDEBAR -->
+            <aside class="owner-sidebar">
+                <div class="sidebar-store-info">
+                    <div class="sidebar-store-icon">🏥</div>
+                    <div class="sidebar-store-name" id="sidebarStoreName">My Pharmacy</div>
+                    <div class="sidebar-store-sub" id="sidebarStoreSub">Store Owner</div>
+                </div>
+                <nav class="sidebar-nav">
+                    <div class="sidebar-section-label">Dashboard</div>
+                    <button class="sidebar-item active" data-owner-tab="home" onclick="switchOwnerTab('home')">
+                        <span class="si-icon">🏠</span><span>Home</span>
+                    </button>
+                    <div class="sidebar-section-label">Manage</div>
+                    <button class="sidebar-item" data-owner-tab="inventory" onclick="switchOwnerTab('inventory')">
+                        <span class="si-icon">💊</span><span>Inventory</span>
+                    </button>
+                    <button class="sidebar-item" data-owner-tab="orders" onclick="switchOwnerTab('orders')">
+                        <span class="si-icon">📦</span><span>Orders</span>
+                        <span class="sidebar-badge" id="pendingOrdersBadge" style="display:none"></span>
+                    </button>
+                    <button class="sidebar-item" data-owner-tab="prescriptions" onclick="switchOwnerTab('prescriptions')">
+                        <span class="si-icon">📄</span><span>Prescriptions</span>
+                        <span class="sidebar-badge" id="pendingRxBadge" style="display:none"></span>
+                    </button>
+                    <button class="sidebar-item" data-owner-tab="history" onclick="switchOwnerTab('history')">
+                        <span class="si-icon">📊</span><span>Order History</span>
+                    </button>
+                    <div class="sidebar-section-label">Account</div>
+                    <button class="sidebar-item" data-owner-tab="profile" onclick="switchOwnerTab('profile')">
+                        <span class="si-icon">⚙️</span><span>Store Profile</span>
+                    </button>
+                </nav>
+            </aside>
+
+            <!-- MAIN CONTENT -->
+            <main class="owner-main">
+
+                <!-- ── HOME TAB ── -->
+                <div class="owner-tab active" id="otab-home">
+                    <div class="owner-home-header">
+                        <div class="ohh-label">Store Dashboard</div>
+                        <div class="ohh-name" id="ownerWelcomeName">Welcome back! 👋</div>
+                        <div class="ohh-sub">Here's what's happening at your store today.</div>
+                    </div>
+
+                    <div class="stats-row">
+                        <div class="stat-card">
+                            <div class="stat-icon blue">📦</div>
+                            <div><div class="stat-num" id="statTotalOrders">—</div><div class="stat-lbl">Total Orders</div></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon green">💰</div>
+                            <div><div class="stat-num" id="statRevenue">—</div><div class="stat-lbl">Revenue</div></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon amber">💊</div>
+                            <div><div class="stat-num" id="statMedCount">—</div><div class="stat-lbl">Medicines</div></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon red">📄</div>
+                            <div><div class="stat-num" id="statPendingRx">—</div><div class="stat-lbl">Pending Rx</div></div>
+                        </div>
+                    </div>
+
+                    <div class="owner-section">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+                            <!-- Low Stock Alerts -->
+                            <div>
+                                <div class="owner-section-head">
+                                    <div><div class="owner-section-title">⚠️ Low Stock Alerts</div></div>
+                                    <button class="tbl-btn edit" onclick="switchOwnerTab('inventory')">View All</button>
+                                </div>
+                                <div class="low-stock-panel" id="homeLowStock">
+                                    <div class="owner-empty"><div class="oe-icon">✅</div><div class="oe-title">All stocked up</div></div>
+                                </div>
+                            </div>
+                            <!-- Recent Activity -->
+                            <div>
+                                <div class="owner-section-head">
+                                    <div><div class="owner-section-title">🕐 Recent Orders</div></div>
+                                    <button class="tbl-btn edit" onclick="switchOwnerTab('orders')">View All</button>
+                                </div>
+                                <div class="activity-list" id="homeRecentOrders">
+                                    <div class="owner-empty"><div class="oe-icon">📭</div><div class="oe-title">No recent orders</div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── INVENTORY TAB ── -->
+                <div class="owner-tab" id="otab-inventory">
+                    <div class="owner-section">
+                        <div class="owner-section-head">
+                            <div>
+                                <div class="owner-section-title">Add New Medicine</div>
+                                <div class="owner-section-sub">Fill in the details to add a medicine to your inventory</div>
+                            </div>
+                        </div>
+
+                        <div class="add-med-panel">
+                            <div class="amp-head"><span class="amp-badge">➕ New Item</span><span class="amp-title">Medicine Details</span></div>
+                            <div class="amp-grid">
+                                <div><label class="o-label">Medicine Name *</label><input class="o-inp" type="text" id="newMedName" placeholder="e.g. Paracetamol 500mg"/></div>
+                                <div><label class="o-label">Price (₹) *</label><input class="o-inp" type="number" id="newMedPrice" placeholder="45.00" step="0.01"/></div>
+                                <div><label class="o-label">Stock Quantity *</label><input class="o-inp" type="number" id="newMedStock" placeholder="100"/></div>
+                                <div>
+                                    <label class="o-label">Category</label>
+                                    <select class="o-inp" id="newMedCat">
+                                        <option value="">Select category</option>
+                                        <option>Antibiotics</option><option>Analgesics</option>
+                                        <option>Vitamins &amp; Supplements</option><option>Antidiabetics</option>
+                                        <option>Cardiovascular</option><option>Antiallergics</option>
+                                        <option>Gastrointestinal</option><option>General</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div style="margin-bottom:16px"><label class="o-label">Description (optional)</label><input class="o-inp" type="text" id="newMedDesc" placeholder="Brief description…"/></div>
+                            <button class="btn-primary" onclick="addMedicine()">+ Add to Inventory</button>
+                        </div>
+
+                        <!-- Inline Edit Panel -->
+                        <div class="edit-panel" id="editPanel">
+                            <div class="edit-panel-head">
+                                <div class="edit-panel-title">✏️ Edit Medicine</div>
+                                <button class="edit-panel-close" onclick="closeEditPanel()">✕</button>
+                            </div>
+                            <div class="edit-grid">
+                                <div class="edit-group"><label>Medicine Name *</label><input class="edit-inp" type="text" id="eName" placeholder="Medicine name"/></div>
+                                <div class="edit-group"><label>Price (₹) *</label><input class="edit-inp" type="number" id="ePrice" placeholder="0.00" step="0.01"/></div>
+                                <div class="edit-group"><label>Stock Quantity *</label><input class="edit-inp" type="number" id="eStock" placeholder="0"/></div>
+                                <div class="edit-group">
+                                    <label>Category</label>
+                                    <select class="edit-inp" id="eCat">
+                                        <option value="">Select category</option>
+                                        <option>Antibiotics</option><option>Analgesics</option>
+                                        <option>Vitamins &amp; Supplements</option><option>Antidiabetics</option>
+                                        <option>Cardiovascular</option><option>Antiallergics</option>
+                                        <option>Gastrointestinal</option><option>General</option>
+                                    </select>
+                                </div>
+                                <div class="edit-group" style="grid-column:1/-1"><label>Description</label><input class="edit-inp" type="text" id="eDesc" placeholder="Brief description…"/></div>
+                            </div>
+                            <div class="edit-actions">
+                                <button class="btn-save" onclick="saveEditMedicine()">Save Changes</button>
+                                <button class="btn-cancel-edit" onclick="closeEditPanel()">Cancel</button>
+                            </div>
+                        </div>
+
+                        <div class="owner-section-head" style="margin-top:0">
+                            <div>
+                                <div class="owner-section-title">Current Inventory</div>
+                                <div class="owner-section-sub" id="invCountLabel">Loading…</div>
+                            </div>
+                            <div class="filter-row" style="margin-bottom:0">
+                                <input class="filter-inp" type="text" id="invSearch" placeholder="Search medicines…" oninput="filterInventory()"/>
+                            </div>
+                        </div>
+
+                        <div class="inv-table-wrap">
+                            <table class="inv-table">
+                                <thead>
+                                    <tr>
+                                        <th>Medicine</th><th>Category</th><th>Price</th><th>Stock</th><th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="invTableBody">
+                                    <tr><td colspan="5" style="text-align:center;padding:32px"><div class="loader-ring"></div></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── ORDERS TAB ── -->
+                <div class="owner-tab" id="otab-orders">
+                    <div class="owner-section">
+                        <div class="owner-section-head">
+                            <div>
+                                <div class="owner-section-title">Store Orders</div>
+                                <div class="owner-section-sub">Manage and update order statuses</div>
+                            </div>
+                            <div class="filter-row" style="margin-bottom:0">
+                                <select class="filter-inp" id="orderStatusFilter" onchange="renderOrders()">
+                                    <option value="">All Statuses</option>
+                                    <option value="PLACED">Placed</option>
+                                    <option value="CONFIRMED">Confirmed</option>
+                                    <option value="OUT_FOR_DELIVERY">Out for Delivery</option>
+                                    <option value="DELIVERED">Delivered</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="ownerOrdersContainer"><div class="owner-empty"><div class="loader-ring"></div></div></div>
+                    </div>
+                </div>
+
+                <!-- ── PRESCRIPTIONS TAB ── -->
+                <div class="owner-tab" id="otab-prescriptions">
+                    <div class="owner-section">
+                        <div class="owner-section-head">
+                            <div>
+                                <div class="owner-section-title">Prescription Requests</div>
+                                <div class="owner-section-sub">Review patient prescriptions and respond with bill details</div>
+                            </div>
+                            <div class="filter-row" style="margin-bottom:0">
+                                <select class="filter-inp" id="rxStatusFilter" onchange="renderPrescriptions()">
+                                    <option value="">All</option>
+                                    <option value="PENDING">Pending</option>
+                                    <option value="CONFIRMED">Confirmed</option>
+                                    <option value="NOT_CONFIRMED">Not Confirmed</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="ownerRxContainer"><div class="owner-empty"><div class="loader-ring"></div></div></div>
+                    </div>
+                </div>
+
+                <!-- ── ORDER HISTORY TAB ── -->
+                <div class="owner-tab" id="otab-history">
+                    <div class="owner-section">
+                        <div class="owner-section-head">
+                            <div>
+                                <div class="owner-section-title">Order History</div>
+                                <div class="owner-section-sub">All orders placed at your store</div>
+                            </div>
+                            <div class="filter-row" style="margin-bottom:0">
+                                <input class="filter-inp" type="text" id="historySearch" placeholder="Search by name or order #…" oninput="renderHistory()"/>
+                            </div>
+                        </div>
+                        <div id="ownerHistoryContainer"><div class="owner-empty"><div class="loader-ring"></div></div></div>
+                    </div>
+                </div>
+
+                <!-- ── STORE PROFILE TAB ── -->
+                <div class="owner-tab" id="otab-profile">
+                    <div class="owner-section">
+                        <div class="owner-section-head">
+                            <div>
+                                <div class="owner-section-title">⚙️ Store Profile</div>
+                                <div class="owner-section-sub">Update your store details and address</div>
+                            </div>
+                        </div>
+                        <div class="form-section" style="max-width: 600px;">
+                            <div class="form-grid">
+                                <div class="input-group">
+                                    <label>Store Name</label>
+                                    <div class="input-wrap"><input type="text" id="editStoreName"/></div>
+                                </div>
+                                <div class="input-group">
+                                    <label>City / Location</label>
+                                    <div class="input-wrap"><input type="text" id="editStoreLocation"/></div>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label>Full Address</label>
+                                <textarea class="textarea-inp" id="editStoreAddress"></textarea>
+                            </div>
+                            
+                            <button class="btn-primary" style="margin-top:1.5rem" onclick="updateStoreProfile()">💾 Save Changes</button>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+</div><!-- end .app -->
+
+<!-- ═══════════════════════════════════════════════
+     ADMIN DASHBOARD PAGE (outside .app for isolation)
+════════════════════════════════════════════════ -->
+<div class="page" id="page-admin" style="display:none">
+  <div class="owner-shell">
+
+    <!-- ADMIN SIDEBAR -->
+    <aside class="owner-sidebar admin-sidebar">
+      <div class="sidebar-store-info">
+        <div class="sidebar-store-icon">🛡️</div>
+        <div class="sidebar-store-name">Admin Panel</div>
+        <div class="sidebar-store-sub">Full Platform Access</div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="sidebar-section-label">Dashboard</div>
+        <button class="sidebar-item active" data-admin-tab="overview" onclick="switchAdminTab('overview')">
+          <span class="si-icon">📊</span><span>Overview</span>
+        </button>
+        <div class="sidebar-section-label">Manage</div>
+        <button class="sidebar-item" data-admin-tab="users" onclick="switchAdminTab('users')">
+          <span class="si-icon">👥</span><span>Users</span>
+        </button>
+        <button class="sidebar-item" data-admin-tab="stores" onclick="switchAdminTab('stores')">
+          <span class="si-icon">🏪</span><span>Stores</span>
+        </button>
+        <button class="sidebar-item" data-admin-tab="orders" onclick="switchAdminTab('orders')">
+          <span class="si-icon">📦</span><span>All Orders</span>
+        </button>
+        <button class="sidebar-item" data-admin-tab="prescriptions" onclick="switchAdminTab('prescriptions')">
+          <span class="si-icon">📄</span><span>Prescriptions</span>
+        </button>
+      </nav>
+    </aside>
+
+    <!-- ADMIN MAIN -->
+    <main class="owner-main">
+
+      <!-- OVERVIEW TAB -->
+      <div class="owner-tab active" id="atab-overview">
+        <div class="owner-home-header" style="background:linear-gradient(135deg,#0f172a 0%,#1e293b 60%,#7c3aed 100%)">
+          <div class="ohh-label">👋 Welcome, Admin</div>
+          <div class="ohh-name">Platform Overview</div>
+          <div class="ohh-sub">Complete control over MedDelivery platform</div>
+        </div>
+        <div class="stats-row" style="grid-template-columns:repeat(4,1fr)">
+          <div class="stat-card"><div class="stat-icon blue">👥</div><div><div class="stat-num" id="aStatUsers">—</div><div class="stat-lbl">Total Users</div></div></div>
+          <div class="stat-card"><div class="stat-icon green">🏪</div><div><div class="stat-num" id="aStatStores">—</div><div class="stat-lbl">Stores</div></div></div>
+          <div class="stat-card"><div class="stat-icon amber">📦</div><div><div class="stat-num" id="aStatOrders">—</div><div class="stat-lbl">Total Orders</div></div></div>
+          <div class="stat-card"><div class="stat-icon red">💰</div><div><div class="stat-num" id="aStatRevenue">—</div><div class="stat-lbl">Platform Revenue</div></div></div>
+        </div>
+        <div class="stats-row" style="grid-template-columns:repeat(3,1fr);margin-top:12px">
+          <div class="stat-card"><div class="stat-icon blue">🧑‍⚕️</div><div><div class="stat-num" id="aStatPatients">—</div><div class="stat-lbl">Patients</div></div></div>
+          <div class="stat-card"><div class="stat-icon amber">📄</div><div><div class="stat-num" id="aStatRx">—</div><div class="stat-lbl">Prescription Requests</div></div></div>
+          <div class="stat-card"><div class="stat-icon red">⏳</div><div><div class="stat-num" id="aStatPendingRx">—</div><div class="stat-lbl">Pending Rx</div></div></div>
+        </div>
+        <div class="owner-section" style="margin-top:8px">
+          <div class="owner-section-head"><div><div class="owner-section-title">📊 Quick Actions</div></div></div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+            <button class="admin-quick-btn" onclick="switchAdminTab('users');loadAdminUsers('')">👥 Manage Users</button>
+            <button class="admin-quick-btn" onclick="switchAdminTab('stores');loadAdminStores()">🏪 Manage Stores</button>
+            <button class="admin-quick-btn" onclick="switchAdminTab('orders');loadAdminOrders('')">📦 View All Orders</button>
+            <button class="admin-quick-btn" onclick="switchAdminTab('prescriptions');loadAdminPrescriptions('')">📄 View All Rx</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- USERS TAB -->
+      <div class="owner-tab" id="atab-users">
+        <div class="owner-section">
+          <div class="owner-section-head">
+            <div><div class="owner-section-title">👥 User Management</div><div class="owner-section-sub">View, block, and manage all platform users</div></div>
+            <div class="filter-row" style="margin-bottom:0;gap:8px">
+              <select class="filter-inp" id="adminUserRoleFilter" onchange="loadAdminUsers(this.value)">
+                <option value="">All Roles</option>
+                <option value="PATIENT">Patients</option>
+                <option value="STORE">Store Owners</option>
+              </select>
+              <input class="filter-inp" type="text" id="adminUserSearch" placeholder="Search by name/email…" oninput="filterAdminUsersTable()"/>
+            </div>
+          </div>
+          <div class="inv-table-wrap">
+            <table class="inv-table">
+              <thead><tr><th>#</th><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="adminUsersTableBody"><tr><td colspan="6" style="text-align:center;padding:32px"><div class="loader-ring"></div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- STORES TAB -->
+      <div class="owner-tab" id="atab-stores">
+        <div class="owner-section">
+          <div class="owner-section-head">
+            <div><div class="owner-section-title">🏪 Store Management</div><div class="owner-section-sub">All registered medical stores on the platform</div></div>
+            <input class="filter-inp" type="text" id="adminStoreSearch" placeholder="Search store…" oninput="filterAdminStoresTable()"/>
+          </div>
+          <div class="inv-table-wrap">
+            <table class="inv-table">
+              <thead><tr><th>#</th><th>Store Name</th><th>Owner</th><th>Location</th><th>Address</th><th>Actions</th></tr></thead>
+              <tbody id="adminStoresTableBody"><tr><td colspan="6" style="text-align:center;padding:32px"><div class="loader-ring"></div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ORDERS TAB -->
+      <div class="owner-tab" id="atab-orders">
+        <div class="owner-section">
+          <div class="owner-section-head">
+            <div><div class="owner-section-title">📦 All Orders</div><div class="owner-section-sub">Every order placed across all stores</div></div>
+            <div class="filter-row" style="margin-bottom:0;gap:8px">
+              <select class="filter-inp" id="adminOrderStatusFilter" onchange="loadAdminOrders(this.value)">
+                <option value="">All Statuses</option>
+                <option value="PLACED">Placed</option>
+                <option value="CONFIRMED">Confirmed</option>
+                <option value="OUT_FOR_DELIVERY">Out for Delivery</option>
+                <option value="DELIVERED">Delivered</option>
+              </select>
+              <input class="filter-inp" type="text" id="adminOrderSearch" placeholder="Search by customer…" oninput="filterAdminOrdersTable()"/>
+            </div>
+          </div>
+          <div class="inv-table-wrap">
+            <table class="inv-table">
+              <thead><tr><th>#</th><th>Customer</th><th>Store ID</th><th>Items</th><th>Amount</th><th>Status</th><th>Date</th><th>Action</th></tr></thead>
+              <tbody id="adminOrdersTableBody"><tr><td colspan="8" style="text-align:center;padding:32px"><div class="loader-ring"></div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRESCRIPTIONS TAB -->
+      <div class="owner-tab" id="atab-prescriptions">
+        <div class="owner-section">
+          <div class="owner-section-head">
+            <div><div class="owner-section-title">📄 All Prescriptions</div><div class="owner-section-sub">All prescription requests submitted across the platform</div></div>
+            <select class="filter-inp" id="adminRxStatusFilter" onchange="loadAdminPrescriptions(this.value)">
+              <option value="">All Statuses</option>
+              <option value="PENDING">Pending</option>
+              <option value="CONFIRMED">Confirmed</option>
+              <option value="NOT_CONFIRMED">Not Confirmed</option>
+            </select>
+          </div>
+          <div class="inv-table-wrap">
+            <table class="inv-table">
+              <thead><tr><th>#</th><th>Patient</th><th>Store ID</th><th>Phone</th><th>Address</th><th>Bill</th><th>Status</th><th>Date</th><th>File</th></tr></thead>
+              <tbody id="adminRxTableBody"><tr><td colspan="9" style="text-align:center;padding:32px"><div class="loader-ring"></div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div><!-- end #page-admin -->
+
+<!-- TOASTS -->
+<div class="toast-stack" id="toastStack"></div>
+
+<script src="App.js"></script>
+</body>
+</html>
