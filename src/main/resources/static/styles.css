@@ -1689,8 +1689,7 @@ body::before {
   font-family: var(--font-body);
 }
 .status-select:focus { outline: none; border-color: var(--teal); }
-.status-select option { background: var(--bg2); }
-
+.status-select option { background: #1a2a3a; color: #ffffff; }
 /* Status pills (owner context) */
 .spill {
   display: inline-block; font-size: 10px; font-weight: 700;
@@ -1936,6 +1935,6 @@ body::before {
   .form-row { grid-template-columns: 1fr; }
 }
 select option {
-  background-color: #ffffff;
-  color: #000000;
+  background-color: #1a2a3a !important;
+  color: #ffffff !important;
 }
