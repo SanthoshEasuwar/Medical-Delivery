@@ -1935,3 +1935,7 @@ body::before {
   .section { padding: 20px; }
   .form-row { grid-template-columns: 1fr; }
 }
+select option {
+  background-color: #ffffff;
+  color: #000000;
+}
