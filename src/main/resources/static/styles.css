@@ -79,7 +79,7 @@ body::before {
 /* ════════════════════════════════════════
    AUTH SCREEN
    ════════════════════════════════════════ */
-.auth-screen { display: none; position: fixed; inset: 0; z-index: 1000; overflow: hidden; }
+.auth-screen { display: none; position: fixed; inset: 0; z-index: 1000; overflow-y: auto; }
 .auth-screen.active { display: flex; }
 
 .auth-bg {
